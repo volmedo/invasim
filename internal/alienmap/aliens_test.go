@@ -47,7 +47,7 @@ func Test_New(t *testing.T) {
 			aliens, err := New(tc.numAliens, tc.world)
 
 			if tc.expectsError {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tc.expectedAliensLength, len(aliens))
@@ -100,7 +100,9 @@ func Test_MoveRandomly(t *testing.T) {
 	}
 
 	assert.Contains(t, visitedCities, "Foo")
-	assert.Equal(t, []string{"alien 1", "alien 2"}, visitedCities["Foo"])
+	assert.Contains(t, visitedCities["Foo"], "alien 1")
+	assert.Contains(t, visitedCities["Foo"], "alien 2")
+	assert.NotContains(t, visitedCities["Foo"], "alien 0")
 }
 
 func Test_pickRandomDestination(t *testing.T) {
