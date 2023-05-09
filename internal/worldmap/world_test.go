@@ -80,7 +80,7 @@ func Test_ReadFromFile(t *testing.T) {
 
 			w, err := ReadFromFile(mapFilePath)
 			if tc.expectsError {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 			} else {
 				assert.Nil(t, err)
 				assert.Equal(t, tc.expectedWorld, w)
@@ -164,6 +164,59 @@ func Test_DestroyCity(t *testing.T) {
 			tc.world.DestroyCity(tc.cityToDestroy)
 
 			assert.Equal(t, tc.expectedWorld, tc.world)
+		})
+	}
+}
+
+func Test_String(t *testing.T) {
+	testCases := map[string]struct {
+		world World
+	}{
+		"happy path": {
+			world: World{
+				"Foo": Roads{
+					Direction_North: "Bar",
+					Direction_West:  "Baz",
+					Direction_South: "Qu-ux",
+				},
+				"Bar": Roads{
+					Direction_South: "Foo",
+					Direction_West:  "Bee",
+				},
+				"Baz": Roads{
+					Direction_East: "Foo",
+				},
+				"Qu-ux": Roads{
+					Direction_North: "Foo",
+				},
+				"Bee": Roads{
+					Direction_East: "Bar",
+				},
+			},
+		},
+		"cities only": {
+			world: World{
+				"Foo":   Roads{},
+				"Bar":   Roads{},
+				"Baz":   Roads{},
+				"Qu-ux": Roads{},
+				"Bee":   Roads{},
+			},
+		},
+	}
+
+	tmpDir := t.TempDir()
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// write the stringified world to a file, read it and compare results
+			stringified := tc.world.String()
+			path, err := writeTestFile(tmpDir, name, stringified)
+			assert.Nil(t, err)
+
+			result, err := ReadFromFile(path)
+			assert.Nil(t, err)
+
+			assert.Equal(t, tc.world, result)
 		})
 	}
 }

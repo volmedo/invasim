@@ -157,3 +157,18 @@ func (w World) DestroyCity(city string) {
 
 	delete(w, city)
 }
+
+// String fulfills the Stringer interface. It produces a representation of the given World instance in valid map
+// file format.
+func (w World) String() string {
+	builder := strings.Builder{}
+	for c, roads := range w {
+		builder.WriteString(c)
+		for dir, dest := range roads {
+			builder.WriteString(fmt.Sprintf(" %s=%s", dir, dest))
+		}
+		builder.WriteString("\n")
+	}
+
+	return builder.String()
+}
