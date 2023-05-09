@@ -2,6 +2,7 @@ package alienmap
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/volmedo/invasim/internal/worldmap"
 )
@@ -32,4 +33,57 @@ func New(numAliens int, world worldmap.World) (Aliens, error) {
 	}
 
 	return aliens, nil
+}
+
+// VisitedCities offers the opposite view than what Aliens provides. It maps each city being visited to a list of
+// aliens currently placed in that location. Cities with no alien presence will not appear in this map. It is used
+// as an auxiliary data structure to enable quick checking of cities and aliens that should be destroyed during fights.
+type VisitedCities map[string][]string
+
+// MoveRandomly moves all the aliens in the Aliens tracker randomly through one the roads available from the city
+// each of them is currently at. Once an available road is chosen, the alien's position is updated to the destination.
+// As the function moves aliens around, it also collects visited cities to make checking which cities have more than
+// one alien more convenient.
+func (as Aliens) MoveRandomly(world worldmap.World) VisitedCities {
+	visited := VisitedCities{}
+	for a, currCity := range as {
+		roads := world[currCity]
+		if len(roads) == 0 {
+			// TODO: consider the possibility of removing the alien from the tracker, as it won't be able to move any further
+			continue
+		}
+
+		destCity := pickRandomDestination(roads)
+
+		as[a] = destCity
+
+		visited[destCity] = append(visited[destCity], a)
+	}
+
+	return visited
+}
+
+// pickRandomDestination picks a random road from the set of roads being passed and return the city it leads to.
+// It does so by choosing a random index and enumerating the available roads until the chosen index is found.
+func pickRandomDestination(roads worldmap.Roads) string {
+	randIdx := rand.Intn(len(roads))
+
+	var destCity string
+	i := 0
+	for _, destCity = range roads {
+		if i == randIdx {
+			break
+		}
+
+		i++
+	}
+
+	return destCity
+}
+
+// DestroyAliens removes the passed aliens from the tracker as they were horribly destroyed by their enemies.
+func (as Aliens) DestroyAliens(aliens []string) {
+	for _, a := range aliens {
+		delete(as, a)
+	}
 }
