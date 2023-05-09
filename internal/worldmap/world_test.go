@@ -97,7 +97,11 @@ func writeTestFile(tmpDir, testName, contents string) (string, error) {
 	}
 	defer f.Close()
 
-	f.Write([]byte(contents))
+	_, err = f.Write([]byte(contents))
+	if err != nil {
+		return "", err
+	}
+
 	return f.Name(), nil
 }
 
