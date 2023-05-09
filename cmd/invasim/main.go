@@ -24,13 +24,6 @@ func main() {
 	// random initial placement for aliens
 
 	// start simulation loop
-	for i := 0; i < MAX_ITERATIONS && numAliens > 0; i++ {
-		// move aliens. At this point no city should have more than 1 alien (it would've already been destroyed otherwise)
-
-		// check if aliens are in the same place
-		// TODO: can a city have more than two aliens?
-
-	}
 
 	// check final conditions: either we reached MAX_ITERATIONS or all aliens were destroyed
 	log.Printf("Simulation finished!\n")
