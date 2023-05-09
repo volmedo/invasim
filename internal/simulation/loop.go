@@ -39,4 +39,15 @@ func Run(world worldmap.World, aliens alienmap.Aliens, maxIterations int, out io
 			}
 		}
 	}
+
+	// check final conditions: either all aliens were destroyed or we reached maxIterations
+	fmt.Fprintf(out, "Simulation finished!\n")
+	if len(aliens) == 0 {
+		fmt.Fprintf(out, "All aliens were destroyed!\n")
+	} else {
+		fmt.Fprintf(out, "Max iterations reached, %d alien(s) remaining\n", len(aliens))
+	}
+
+	fmt.Fprintln(out, "This is what the world looks like after the invasion:")
+	fmt.Fprintln(out, world)
 }

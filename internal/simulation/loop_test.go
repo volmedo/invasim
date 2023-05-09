@@ -3,6 +3,7 @@ package simulation
 import (
 	"bufio"
 	"bytes"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,5 +48,11 @@ func Test_Run(t *testing.T) {
 
 	scanner := bufio.NewScanner(out)
 	scanner.Scan()
-	assert.Equal(t, "Foo has been destroyed by alien 1, alien 2 and alien 3!", scanner.Text())
+	assert.Regexp(t, regexp.MustCompile(`Foo has been destroyed by alien \d, alien \d and alien \d!`), scanner.Text())
+	scanner.Scan()
+	assert.Equal(t, "Simulation finished!", scanner.Text())
+	scanner.Scan()
+	assert.Equal(t, "Max iterations reached, 1 alien(s) remaining", scanner.Text())
+	scanner.Scan()
+	assert.Equal(t, "This is what the world looks like after the invasion:", scanner.Text())
 }
