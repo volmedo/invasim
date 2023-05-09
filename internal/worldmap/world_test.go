@@ -71,19 +71,19 @@ func Test_ReadFromFile(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	for name, testData := range testCases {
+	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			mapFilePath, err := writeTestFile(tmpDir, name, testData.mapFileContents)
+			mapFilePath, err := writeTestFile(tmpDir, name, tc.mapFileContents)
 			if err != nil {
 				t.Fatal("Error writing test file")
 			}
 
 			w, err := ReadFromFile(mapFilePath)
-			if testData.expectsError {
+			if tc.expectsError {
 				assert.NotNil(t, err)
 			} else {
 				assert.Nil(t, err)
-				assert.Equal(t, testData.expectedWorld, w)
+				assert.Equal(t, tc.expectedWorld, w)
 			}
 		})
 	}
@@ -99,4 +99,67 @@ func writeTestFile(tmpDir, testName, contents string) (string, error) {
 
 	f.Write([]byte(contents))
 	return f.Name(), nil
+}
+
+func Test_DestroyCity(t *testing.T) {
+	testCases := map[string]struct {
+		world         World
+		cityToDestroy string
+		expectedWorld World
+	}{
+		"happy path": {
+			world: World{
+				"Foo": Roads{
+					Direction_North: "Bar",
+					Direction_West:  "Baz",
+				},
+				"Bar": Roads{
+					Direction_South: "Foo",
+				},
+				"Baz": Roads{
+					Direction_East: "Foo",
+				},
+			},
+			cityToDestroy: "Foo",
+			expectedWorld: World{
+				"Bar": Roads{},
+				"Baz": Roads{},
+			},
+		},
+		"passing a non-existent city is a no-op": {
+			world: World{
+				"Foo": Roads{
+					Direction_North: "Bar",
+					Direction_West:  "Baz",
+				},
+				"Bar": Roads{
+					Direction_South: "Foo",
+				},
+				"Baz": Roads{
+					Direction_East: "Foo",
+				},
+			},
+			cityToDestroy: "Qu-ux",
+			expectedWorld: World{
+				"Foo": Roads{
+					Direction_North: "Bar",
+					Direction_West:  "Baz",
+				},
+				"Bar": Roads{
+					Direction_South: "Foo",
+				},
+				"Baz": Roads{
+					Direction_East: "Foo",
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			tc.world.DestroyCity(tc.cityToDestroy)
+
+			assert.Equal(t, tc.expectedWorld, tc.world)
+		})
+	}
 }

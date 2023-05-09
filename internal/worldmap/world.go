@@ -140,3 +140,20 @@ func parseLine(world World, line string, lineNum int) error {
 
 	return nil
 }
+
+// DestroyCity removes the given city from the World, along with the roads to other cities, leaving a big hole behind.
+// The function will also take care to remove the road to the destroyed city from destination cities.
+func (w World) DestroyCity(city string) {
+	roads := w[city]
+	for _, dest := range roads {
+		destRoads := w[dest]
+		for dir, origin := range destRoads {
+			if origin == city {
+				delete(w[dest], dir)
+				break
+			}
+		}
+	}
+
+	delete(w, city)
+}
