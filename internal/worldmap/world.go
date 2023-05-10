@@ -51,7 +51,7 @@ func (d Direction) opposite() (Direction, error) {
 //	map file = city line , { city line } ;
 //	city line = city name , {" " , road} ;
 //	city name = ( alpha | digit ) , { alpha | digit } ;
-//	road = direction , city name ;
+//	road = direction , "=" , city name ;
 //	direction = "east" | "north" | "south" | "west" ;
 func ReadFromFile(path string) (World, error) {
 	file, err := os.Open(path)
