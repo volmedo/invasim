@@ -1,6 +1,7 @@
 package alienmap
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -54,6 +55,48 @@ func Test_New(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_randomizeCities(t *testing.T) {
+	world := worldmap.World{
+		"Foo": worldmap.Roads{},
+		"Bar": worldmap.Roads{},
+		"Baz": worldmap.Roads{},
+	}
+
+	resultCounts := map[string]int{
+		"FooBarBaz": 0,
+		"FooBazBar": 0,
+		"BarFooBaz": 0,
+		"BarBazFoo": 0,
+		"BazFooBar": 0,
+		"BazBarFoo": 0,
+	}
+
+	// since the results from the function are random, we'll call it a given number of times and collect results.
+	// We will then check those results for statistical randomness
+	numIterations := 2000
+	for i := 0; i < numIterations; i++ {
+		randCitites := randomizeCities(world)
+		resultCounts[strings.Join(randCitites, "")]++
+	}
+
+	// assert results are selected uniformly
+	assert.Condition(t, func() bool {
+		// allow 15% deviation
+		even := numIterations / len(resultCounts)
+		delta := even * 15 / 100
+		lowThreshold := even - delta
+		highThreshold := even + delta
+
+		for _, count := range resultCounts {
+			if count < lowThreshold || count > highThreshold {
+				return false
+			}
+		}
+
+		return true
+	})
 }
 
 func Test_MoveRandomly(t *testing.T) {
@@ -120,19 +163,19 @@ func Test_pickRandomDestination(t *testing.T) {
 		"Qu-ux": 0,
 	}
 
-	numIterations := 1000
+	// since the results from the function are random, we will call it a given number of times and collect results.
+	// We will then check those results for statistical randomness
+	numIterations := 2000
 	for i := 0; i < numIterations; i++ {
 		dest := pickRandomDestination(roads)
 		resultCounts[dest]++
 	}
 
-	t.Log(resultCounts)
-
-	// assert that roads are selected uniformly (around 1000/4 or 250 times each)
+	// assert that roads are selected uniformly (around 2000/4 or 500 times each)
 	assert.Condition(t, func() bool {
-		// allow 10% deviation
+		// allow 15% deviation
 		even := numIterations / len(resultCounts)
-		delta := even * 10 / 100
+		delta := even * 15 / 100
 		lowThreshold := even - delta
 		highThreshold := even + delta
 

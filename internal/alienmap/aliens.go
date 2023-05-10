@@ -19,20 +19,33 @@ func New(numAliens int, world worldmap.World) (Aliens, error) {
 
 	aliens := Aliens{}
 
+	randomCities := randomizeCities(world)
+	randomCities = randomCities[:numAliens]
+
 	// to place the aliens randomly we can take advantage of the inherently non-deterministic ordering of elements
 	// observed when ranging over a map in Go
 	alien := 0
-	for city := range world {
-		if alien >= numAliens {
-			break
-		}
-
+	for _, city := range randomCities {
 		name := fmt.Sprintf("alien %d", alien)
 		aliens[name] = city
 		alien++
 	}
 
 	return aliens, nil
+}
+
+// randomizeCities returns a slice with the names of the cities in world in a random order.
+func randomizeCities(world worldmap.World) []string {
+	randomCities := make([]string, 0, len(world))
+	for city := range world {
+		randomCities = append(randomCities, city)
+	}
+
+	rand.Shuffle(len(randomCities), func(i, j int) {
+		randomCities[i], randomCities[j] = randomCities[j], randomCities[i]
+	})
+
+	return randomCities
 }
 
 // VisitedCities offers the opposite view than what Aliens provides. It maps each city being visited to a list of
