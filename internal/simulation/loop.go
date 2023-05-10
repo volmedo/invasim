@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/volmedo/invasim/internal/alienmap"
+	"github.com/volmedo/invasim/internal/aliens"
 	"github.com/volmedo/invasim/internal/worldmap"
 )
 
@@ -19,22 +19,22 @@ import (
 // happens first.
 // The function accepts an io.Writer where city destruction messages will be printed to make testing for correct output
 // easier.
-func Run(world worldmap.World, aliens alienmap.Aliens, maxIterations int, out io.Writer) {
-	for i := 0; i < maxIterations && len(aliens) > 0; i++ {
+func Run(world worldmap.World, alienTracker aliens.Tracker, maxIterations int, out io.Writer) {
+	for i := 0; i < maxIterations && len(alienTracker) > 0; i++ {
 		// move aliens
 		// at this point no city should have more than 1 alien (it would've already been destroyed otherwise)
-		visitedCities := aliens.MoveRandomly(world)
+		visitedCities := alienTracker.MoveRandomly(world)
 
 		// check if aliens are in the same place using the visited cities view
-		for city, as := range visitedCities {
-			if len(as) > 1 {
+		for city, aliens := range visitedCities {
+			if len(aliens) > 1 {
 				world.DestroyCity(city)
-				aliens.DestroyAliens(as)
+				alienTracker.DestroyAliens(aliens)
 
 				fmt.Fprintf(
 					out,
 					"%s has been destroyed by %s and %s!\n",
-					city, strings.Join(as[:len(as)-1], ", "), as[len(as)-1],
+					city, strings.Join(aliens[:len(aliens)-1], ", "), aliens[len(aliens)-1],
 				)
 			}
 		}
@@ -42,10 +42,10 @@ func Run(world worldmap.World, aliens alienmap.Aliens, maxIterations int, out io
 
 	// check final conditions: either all aliens were destroyed or we reached maxIterations
 	fmt.Fprintf(out, "Simulation finished!\n")
-	if len(aliens) == 0 {
+	if len(alienTracker) == 0 {
 		fmt.Fprintf(out, "All aliens were destroyed!\n")
 	} else {
-		fmt.Fprintf(out, "Max iterations reached, %d alien(s) remaining\n", len(aliens))
+		fmt.Fprintf(out, "Max iterations reached, %d alien(s) remaining\n", len(alienTracker))
 	}
 
 	fmt.Fprintln(out, "This is what the world looks like after the invasion:")

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/volmedo/invasim/internal/alienmap"
+	"github.com/volmedo/invasim/internal/aliens"
 	"github.com/volmedo/invasim/internal/worldmap"
 )
 
@@ -29,7 +29,7 @@ func Test_Run(t *testing.T) {
 		},
 	}
 
-	aliens := alienmap.Aliens{
+	alienTracker := aliens.Tracker{
 		"alien 0": "Foo",
 		"alien 1": "Bar",
 		"alien 2": "Baz",
@@ -39,12 +39,12 @@ func Test_Run(t *testing.T) {
 	maxIterations := 1
 	out := &bytes.Buffer{}
 
-	Run(world, aliens, maxIterations, out)
+	Run(world, alienTracker, maxIterations, out)
 
 	assert.NotContains(t, world, "Foo")
-	assert.NotContains(t, aliens, "alien 1")
-	assert.NotContains(t, aliens, "alien 2")
-	assert.NotContains(t, aliens, "alien 3")
+	assert.NotContains(t, alienTracker, "alien 1")
+	assert.NotContains(t, alienTracker, "alien 2")
+	assert.NotContains(t, alienTracker, "alien 3")
 
 	scanner := bufio.NewScanner(out)
 	scanner.Scan()

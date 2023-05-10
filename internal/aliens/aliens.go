@@ -1,4 +1,4 @@
-package alienmap
+package aliens
 
 import (
 	"fmt"
@@ -7,31 +7,29 @@ import (
 	"github.com/volmedo/invasim/internal/worldmap"
 )
 
-// Aliens keeps track of the city each alien is currently at
-type Aliens map[string]string
+// Tracker keeps track of the city each alien is currently at
+type Tracker map[string]string
 
-// New creates a new Aliens map with numAliens aliens placed randomly in one of the cities of world.
+// NewTracker creates a new alien Tracker with numAliens aliens placed randomly in one of the cities of world.
 // Since there can only be an alien in a city, numAliens cannot be greater than the number of cities in world.
-func New(numAliens int, world worldmap.World) (Aliens, error) {
+func NewTracker(numAliens int, world worldmap.World) (Tracker, error) {
 	if numAliens > len(world) {
-		return Aliens{}, fmt.Errorf("not enough cities (%d) to place %d aliens", len(world), numAliens)
+		return Tracker{}, fmt.Errorf("not enough cities (%d) to place %d aliens", len(world), numAliens)
 	}
 
-	aliens := Aliens{}
+	tracker := Tracker{}
 
 	randomCities := randomizeCities(world)
 	randomCities = randomCities[:numAliens]
 
-	// to place the aliens randomly we can take advantage of the inherently non-deterministic ordering of elements
-	// observed when ranging over a map in Go
 	alien := 0
 	for _, city := range randomCities {
 		name := fmt.Sprintf("alien %d", alien)
-		aliens[name] = city
+		tracker[name] = city
 		alien++
 	}
 
-	return aliens, nil
+	return tracker, nil
 }
 
 // randomizeCities returns a slice with the names of the cities in world in a random order.
@@ -53,13 +51,13 @@ func randomizeCities(world worldmap.World) []string {
 // as an auxiliary data structure to enable quick checking of cities and aliens that should be destroyed during fights.
 type VisitedCities map[string][]string
 
-// MoveRandomly moves all the aliens in the Aliens tracker randomly through one the roads available from the city
-// each of them is currently at. Once an available road is chosen, the alien's position is updated to the destination.
+// MoveRandomly moves all the aliens in the Tracker randomly through one the roads available from the city each of them
+// is currently at. Once an available road is chosen, the alien's position is updated to the destination.
 // As the function moves aliens around, it also collects visited cities to make checking which cities have more than
 // one alien more convenient.
-func (as Aliens) MoveRandomly(world worldmap.World) VisitedCities {
+func (t Tracker) MoveRandomly(world worldmap.World) VisitedCities {
 	visited := VisitedCities{}
-	for a, currCity := range as {
+	for a, currCity := range t {
 		roads := world[currCity]
 		if len(roads) == 0 {
 			// TODO: consider the possibility of removing the alien from the tracker, as it won't be able to move any further
@@ -68,7 +66,7 @@ func (as Aliens) MoveRandomly(world worldmap.World) VisitedCities {
 
 		destCity := pickRandomDestination(roads)
 
-		as[a] = destCity
+		t[a] = destCity
 
 		visited[destCity] = append(visited[destCity], a)
 	}
@@ -94,9 +92,9 @@ func pickRandomDestination(roads worldmap.Roads) string {
 	return destCity
 }
 
-// DestroyAliens removes the passed aliens from the tracker as they were horribly destroyed by their enemies.
-func (as Aliens) DestroyAliens(aliens []string) {
+// DestroyAliens removes the passed aliens from the Tracker as they were horribly destroyed by their enemies.
+func (t Tracker) DestroyAliens(aliens []string) {
 	for _, a := range aliens {
-		delete(as, a)
+		delete(t, a)
 	}
 }

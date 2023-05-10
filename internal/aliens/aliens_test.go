@@ -1,4 +1,4 @@
-package alienmap
+package aliens
 
 import (
 	"strings"
@@ -10,10 +10,10 @@ import (
 
 func Test_New(t *testing.T) {
 	testCases := map[string]struct {
-		numAliens            int
-		world                worldmap.World
-		expectedAliensLength int
-		expectsError         bool
+		numAliens         int
+		world             worldmap.World
+		expectedNumAliens int
+		expectsError      bool
 	}{
 		"happy path": {
 			numAliens: 2,
@@ -25,8 +25,8 @@ func Test_New(t *testing.T) {
 					worldmap.Direction_North: "Foo",
 				},
 			},
-			expectedAliensLength: 2,
-			expectsError:         false,
+			expectedNumAliens: 2,
+			expectsError:      false,
 		},
 		"too many aliens": {
 			numAliens: 3,
@@ -38,20 +38,20 @@ func Test_New(t *testing.T) {
 					worldmap.Direction_North: "Foo",
 				},
 			},
-			expectedAliensLength: 0,
-			expectsError:         true,
+			expectedNumAliens: 0,
+			expectsError:      true,
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			aliens, err := New(tc.numAliens, tc.world)
+			tracker, err := NewTracker(tc.numAliens, tc.world)
 
 			if tc.expectsError {
 				assert.Error(t, err)
 			} else {
 				assert.Nil(t, err)
-				assert.Equal(t, tc.expectedAliensLength, len(aliens))
+				assert.Equal(t, tc.expectedNumAliens, len(tracker))
 			}
 		})
 	}
@@ -100,7 +100,7 @@ func Test_randomizeCities(t *testing.T) {
 }
 
 func Test_MoveRandomly(t *testing.T) {
-	aliens := Aliens{
+	tracker := Tracker{
 		"alien 0": "Foo",
 		"alien 1": "Bar",
 		"alien 2": "Baz",
@@ -119,15 +119,15 @@ func Test_MoveRandomly(t *testing.T) {
 		},
 	}
 
-	visitedCities := aliens.MoveRandomly(world)
+	visitedCities := tracker.MoveRandomly(world)
 
 	// alien 0 can go to Bar or Baz, while aliens 1 and 2 can only go to Foo
 	assert.Condition(t, func() bool {
-		alien0Dest := aliens["alien 0"]
+		alien0Dest := tracker["alien 0"]
 		return alien0Dest == "Bar" || alien0Dest == "Baz"
 	})
-	assert.Equal(t, "Foo", aliens["alien 1"])
-	assert.Equal(t, "Foo", aliens["alien 2"])
+	assert.Equal(t, "Foo", tracker["alien 1"])
+	assert.Equal(t, "Foo", tracker["alien 2"])
 
 	_, okBar := visitedCities["Bar"]
 	_, okBaz := visitedCities["Baz"]
@@ -191,30 +191,30 @@ func Test_pickRandomDestination(t *testing.T) {
 
 func Test_DestroyAliens(t *testing.T) {
 	testCases := map[string]struct {
-		aliens          Aliens
+		tracker         Tracker
 		aliensToDestroy []string
-		expectedAliens  Aliens
+		expectedTracker Tracker
 	}{
 		"happy path": {
-			aliens: Aliens{
+			tracker: Tracker{
 				"alien 0": "Foo",
 				"alien 1": "Bar",
 				"alien 2": "Baz",
 				"alien 3": "Qu-ux",
 			},
 			aliensToDestroy: []string{"alien 1", "alien 3"},
-			expectedAliens: Aliens{
+			expectedTracker: Tracker{
 				"alien 0": "Foo",
 				"alien 2": "Baz",
 			},
 		},
 		"destroying a non-existant alien is a no-op": {
-			aliens: Aliens{
+			tracker: Tracker{
 				"alien 0": "Foo",
 				"alien 1": "Bar",
 			},
 			aliensToDestroy: []string{"alien 2", "alien 3"},
-			expectedAliens: Aliens{
+			expectedTracker: Tracker{
 				"alien 0": "Foo",
 				"alien 1": "Bar",
 			},
@@ -223,9 +223,9 @@ func Test_DestroyAliens(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			tc.aliens.DestroyAliens(tc.aliensToDestroy)
+			tc.tracker.DestroyAliens(tc.aliensToDestroy)
 
-			assert.Equal(t, tc.expectedAliens, tc.aliens)
+			assert.Equal(t, tc.expectedTracker, tc.tracker)
 		})
 	}
 }

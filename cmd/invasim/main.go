@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/volmedo/invasim/internal/alienmap"
+	"github.com/volmedo/invasim/internal/aliens"
 	"github.com/volmedo/invasim/internal/simulation"
 	"github.com/volmedo/invasim/internal/worldmap"
 )
@@ -38,12 +38,12 @@ func main() {
 		fatalf("Error reading map file: %v", err)
 	}
 
-	aliens, err := alienmap.New(numAliens, world)
+	alienTracker, err := aliens.NewTracker(numAliens, world)
 	if err != nil {
 		fatalf("Error placing aliens on their starting positions: %v", err)
 	}
 
-	simulation.Run(world, aliens, MAX_ITERATIONS, os.Stdout)
+	simulation.Run(world, alienTracker, MAX_ITERATIONS, os.Stdout)
 }
 
 func fatalf(format string, v ...any) {
