@@ -75,6 +75,15 @@ func ReadFromFile(path string) (World, error) {
 		return World{}, err
 	}
 
+	consistent, err := isConsistent(world)
+	if err != nil {
+		return World{}, fmt.Errorf("consistency check error: %w", err)
+	}
+
+	if !consistent {
+		return World{}, errors.New("the defined world is not consistent")
+	}
+
 	return world, nil
 }
 
@@ -141,6 +150,73 @@ func parseLine(world World, line string, lineNum int) error {
 	return nil
 }
 
+// coords is a tuple that expresses the position of a city in a grid representation of a world
+type coords struct {
+	x int
+	y int
+}
+
+// isConsistent checks the world for consistency. A world is consistent if every city appears at exactly one position
+// when the given world is represented in a grid.
+func isConsistent(world World) (bool, error) {
+	// start at any point in the map
+	var origin string
+	for c := range world {
+		origin = c
+		break
+	}
+
+	cMap := map[string]coords{}
+
+	return checkConsistency(world, origin, cMap, 0, 0)
+}
+
+// checkConsistency performs a consistency check on the sub-world starting from 'current'. It recursively traverses
+// the world, storing city coordinates in a grid representation. The check will fail if a city is seen
+// at two different locations.
+func checkConsistency(world World, current string, cMap map[string]coords, x, y int) (bool, error) {
+	if _, alreadyVisited := cMap[current]; alreadyVisited {
+		return cMap[current].x == x && cMap[current].y == y, nil
+	}
+
+	cMap[current] = coords{x: x, y: y}
+
+	for dir, dest := range world[current] {
+		nextX, nextY, err := nextCoords(x, y, dir)
+		if err != nil {
+			return false, err
+		}
+
+		consistent, err := checkConsistency(world, dest, cMap, nextX, nextY)
+		if err != nil {
+			return false, err
+		}
+
+		if !consistent {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+// nextCoords calculates the coordinates of the city that would be reached if a road with direction dir was taken from
+// the city at coordinates (x, y).
+func nextCoords(x, y int, dir Direction) (int, int, error) {
+	switch dir {
+	case Direction_East:
+		return x + 1, y, nil
+	case Direction_North:
+		return x, y + 1, nil
+	case Direction_South:
+		return x, y - 1, nil
+	case Direction_West:
+		return x - 1, y, nil
+	default:
+		return 0, 0, fmt.Errorf("invalid direction %s", dir)
+	}
+}
+
 // DestroyCity removes the given city from the World, along with the roads to other cities, leaving a big hole behind.
 // The function will also take care to remove the road to the destroyed city from destination cities.
 func (w World) DestroyCity(city string) {
@@ -158,7 +234,7 @@ func (w World) DestroyCity(city string) {
 	delete(w, city)
 }
 
-// String fulfills the Stringer interface. It produces a representation of the given World instance in valid map
+// String implements the Stringer interface. It produces a representation of the given World instance in valid map
 // file format.
 func (w World) String() string {
 	builder := strings.Builder{}

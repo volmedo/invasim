@@ -68,6 +68,11 @@ func Test_ReadFromFile(t *testing.T) {
 			},
 			expectsError: false,
 		},
+		"inconsistent world": {
+			mapFileContents: "Foo east=Bar\nBar east=Foo west=Foo",
+			expectedWorld:   nil,
+			expectsError:    true,
+		},
 	}
 
 	tmpDir := t.TempDir()
@@ -103,6 +108,144 @@ func writeTestFile(tmpDir, testName, contents string) (string, error) {
 	}
 
 	return f.Name(), nil
+}
+
+func Test_isConsistent(t *testing.T) {
+	testCases := map[string]struct {
+		world              World
+		expectedConsistent bool
+	}{
+		// Bee --- Bar
+		//          |
+		// Baz --- Foo
+		//          |
+		// 	      Qu-ux
+		"consistent (acyclic)": {
+			world: World{
+				"Foo": Roads{
+					Direction_North: "Bar",
+					Direction_West:  "Baz",
+					Direction_South: "Qu-ux",
+				},
+				"Bar": Roads{
+					Direction_South: "Foo",
+					Direction_West:  "Bee",
+				},
+				"Baz": Roads{
+					Direction_East: "Foo",
+				},
+				"Qu-ux": Roads{
+					Direction_North: "Foo",
+				},
+				"Bee": Roads{
+					Direction_East: "Bar",
+				},
+			},
+			expectedConsistent: true,
+		},
+		// Kaa --- Baz
+		//  |       |
+		// Xen --- Bar
+		//  |       |
+		// Muo --- Foo --- Qu-ux
+		"consistent (cyclic)": {
+			world: World{
+				"Foo": Roads{
+					Direction_East:  "Qu-ux",
+					Direction_North: "Bar",
+					Direction_West:  "Muo",
+				},
+				"Qu-ux": Roads{
+					Direction_West: "Foo",
+				},
+				"Bar": Roads{
+					Direction_North: "Baz",
+					Direction_South: "Foo",
+					Direction_West:  "Xen",
+				},
+				"Baz": Roads{
+					Direction_West:  "Kaa",
+					Direction_South: "Bar",
+				},
+				"Kaa": Roads{
+					Direction_East:  "Baz",
+					Direction_South: "Xen",
+				},
+				"Xen": Roads{
+					Direction_East:  "Bar",
+					Direction_North: "Kaa",
+					Direction_South: "Muo",
+				},
+				"Muo": Roads{
+					Direction_East:  "Foo",
+					Direction_North: "Xen",
+				},
+			},
+			expectedConsistent: true,
+		},
+		// Foo --- Bar --- Foo
+		"inconsistent (acyclic)": {
+			world: World{
+				"Foo": Roads{
+					Direction_East: "Bar",
+				},
+				"Bar": Roads{
+					Direction_East: "Foo",
+					Direction_West: "Foo",
+				},
+			},
+			expectedConsistent: false,
+		},
+		// Kaa --- Baz --- Muo
+		//  |       |
+		// Xen --- Bar
+		//  |       |
+		// Muo --- Foo --- Qu-ux
+		// (Muo appears at two places)
+		"inconsistent (cyclic)": {
+			world: World{
+				"Foo": Roads{
+					Direction_East:  "Qu-ux",
+					Direction_North: "Bar",
+					Direction_West:  "Muo",
+				},
+				"Qu-ux": Roads{
+					Direction_West: "Foo",
+				},
+				"Bar": Roads{
+					Direction_North: "Baz",
+					Direction_South: "Foo",
+					Direction_West:  "Xen",
+				},
+				"Baz": Roads{
+					Direction_East:  "Muo",
+					Direction_West:  "Kaa",
+					Direction_South: "Bar",
+				},
+				"Kaa": Roads{
+					Direction_East:  "Baz",
+					Direction_South: "Xen",
+				},
+				"Xen": Roads{
+					Direction_East:  "Bar",
+					Direction_North: "Kaa",
+					Direction_South: "Muo",
+				},
+				"Muo": Roads{
+					Direction_East:  "Foo",
+					Direction_North: "Xen",
+				},
+			},
+			expectedConsistent: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			consistent, _ := isConsistent(tc.world)
+			assert.Equal(t, tc.expectedConsistent, consistent)
+		})
+	}
 }
 
 func Test_DestroyCity(t *testing.T) {
