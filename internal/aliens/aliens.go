@@ -3,6 +3,7 @@ package aliens
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/volmedo/invasim/internal/worldmap"
 )
@@ -22,11 +23,9 @@ func NewTracker(numAliens int, world worldmap.World) (Tracker, error) {
 	randomCities := randomizeCities(world)
 	randomCities = randomCities[:numAliens]
 
-	alien := 0
 	for _, city := range randomCities {
-		name := fmt.Sprintf("alien %d", alien)
+		name := randomAlienName()
 		tracker[name] = city
-		alien++
 	}
 
 	return tracker, nil
@@ -44,6 +43,30 @@ func randomizeCities(world worldmap.World) []string {
 	})
 
 	return randomCities
+}
+
+var vowels = []string{"a", "e", "i", "o", "u"}
+var consonants = []string{"b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "y", "z"}
+var alphabet = append(consonants, vowels...)
+
+// randomAlienName creates a random alien name between 4 and 8 characters long, with a 30% chance of having a hyphen
+// for extra alienness. Thanks ChatGPT.
+func randomAlienName() string {
+	length := rand.Intn(4) + 4
+	name := []string{strings.ToUpper(vowels[rand.Intn(len(vowels))])}
+	for i := 0; i < length-2; i++ {
+		name = append(name, alphabet[rand.Intn(len(alphabet))])
+	}
+	name = append(name, vowels[rand.Intn(len(vowels))])
+	nameStr := ""
+	for _, c := range name {
+		nameStr += c
+	}
+	if rand.Float64() < 0.3 {
+		index := rand.Intn(length-2) + 1
+		nameStr = nameStr[:index] + "-" + nameStr[index:]
+	}
+	return nameStr
 }
 
 // VisitedCities offers the opposite view than what Aliens provides. It maps each city being visited to a list of
