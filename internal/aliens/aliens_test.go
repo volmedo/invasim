@@ -99,6 +99,35 @@ func Test_randomizeCities(t *testing.T) {
 	})
 }
 
+func Test_randomAlienName(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		name := randomAlienName()
+
+		// is between 4 and 8 characters long
+		assert.True(t, len(name) >= 4 && len(name) <= 8)
+
+		// starts with a capital vowel
+		assert.Condition(t, func() bool {
+			switch name[0] {
+			case 'A', 'E', 'I', 'O', 'U':
+				return true
+			default:
+				return false
+			}
+		})
+
+		// ends with a vowel
+		assert.Condition(t, func() bool {
+			switch name[len(name)-1] {
+			case 'a', 'e', 'i', 'o', 'u':
+				return true
+			default:
+				return false
+			}
+		})
+	}
+}
+
 func Test_MoveRandomly(t *testing.T) {
 	tracker := Tracker{
 		"alien 0": "Foo",
