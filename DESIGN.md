@@ -55,9 +55,3 @@ Aside from the implementation details provided above, there are other design dec
 - Functions have side effects. The simulation progresses by mutating some initial state. Functions and methods receive the data structures storing that state and update them in place. I tend to prefer pure functions that don't mutate input parameters. In this case, however, it made sense to make the trade-off for performance reasons. Updating the state in place avoids the potentially expensive operations of creating new data structures and copying the required elements over.
 
 - The project doesn't include end to end tests. They didn't seem to add a lot of value in this case because, as mentioned before, `main` doesn't contain any logic related with the simulation itself. The functions used by `main` are already covered by unit tests. That means the only code e2e tests would cover that is not covered yet is parameter parsing, which is done via the `flag` package, and producing the expected error messages when parameters don't have the expected values, which is not critical.
-
-## Known limitations
-
-There is currently one main limitation I'm still working on: 
-
-- Space portals are supported in world definitions. Currently, conflicts in road declarations are detected by the parser, but that's the only limitation. A consistency check for resulting world maps has not been implemented yet (see [this issue](https://github.com/volmedo/invasim/issues/1) for more information).
