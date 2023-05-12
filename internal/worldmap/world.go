@@ -100,7 +100,11 @@ func parseLine(world World, line string, lineNum int) error {
 	parts := strings.Split(line, " ")
 
 	cityName := parts[0]
-	world[cityName] = Roads{}
+
+	if _, ok := world[cityName]; !ok {
+		world[cityName] = Roads{}
+	}
+
 	for _, road := range parts[1:] {
 		roadParts := strings.Split(road, "=")
 
@@ -129,7 +133,6 @@ func parseLine(world World, line string, lineNum int) error {
 			world[cityName][dir] = dest
 		}
 
-		// add an entry for the destination city to the map if it doesn't exist yet
 		if _, ok := world[dest]; !ok {
 			world[dest] = Roads{}
 		}
